@@ -12985,7 +12985,7 @@ end)
 
 --Input detection
 input.InputBegan:connect(function(key)
-	if btool = true then
+	if btool == true then
 		if key.KeyCode == deleteKey and clicking then
 			local targetPart = mouse.Target
 			--print("Deleted "..targetPart.Name)
