@@ -3106,17 +3106,17 @@ defaults = HttpService:JSONEncode(defaultsettings)
 local KeepInfYield = true
 nosaves = false
 
-local fileExtension = "iy"
+local fileExtension = "mh"
 if SynV3 then fileExtension = "txt" end
 local fileExLen = #fileExtension + 1
 
 local loadedEventData = nil
 function saves()
 	if writefileExploit() then
-		if pcall(function() readfile("IY_FE." .. fileExtension) end) then
-			if readfile("IY_FE." .. fileExtension) ~= nil then
+		if pcall(function() readfile("Moonhack." .. fileExtension) end) then
+			if readfile("Moonhack." .. fileExtension) ~= nil then
 				local success, response = pcall(function()
-					local json = HttpService:JSONDecode(readfile("IY_FE." .. fileExtension))
+					local json = HttpService:JSONDecode(readfile("Moonhack." .. fileExtension))
 					if json.prefix ~= nil then prefix = json.prefix else prefix = ';' end
 					if json.StayOpen ~= nil then StayOpen = json.StayOpen else StayOpen = false end
 					if json.keepIY ~= nil then KeepInfYield = json.keepIY else KeepInfYield = true end
@@ -3138,19 +3138,19 @@ function saves()
 				if not success then
 					warn("Save Json Error:", response)
 					warn("Overwriting Save File")
-					writefileCooldown("IY_FE." .. fileExtension, defaults)
+					writefileCooldown("Moonhack." .. fileExtension, defaults)
 					wait()
 					saves()
 				end
 			else
-				writefileCooldown("IY_FE." .. fileExtension, defaults)
+				writefileCooldown("Moonhack." .. fileExtension, defaults)
 				wait()
 				saves()
 			end
 		else
-			writefileCooldown("IY_FE." .. fileExtension, defaults)
+			writefileCooldown("Moonhack." .. fileExtension, defaults)
 			wait()
-			if pcall(function() readfile("IY_FE." .. fileExtension) end) then
+			if pcall(function() readfile("Moonhack." .. fileExtension) end) then
 				saves()
 			else
 				nosaves = true
@@ -3278,7 +3278,7 @@ function updatesaves()
 			currentScroll = {currentScroll.R,currentScroll.G,currentScroll.B};
 			eventBinds = eventEditor.SaveData()
 		}
-		writefileCooldown("IY_FE." .. fileExtension, HttpService:JSONEncode(update))
+		writefileCooldown("Moonhack." .. fileExtension, HttpService:JSONEncode(update))
 	end
 end
 
@@ -4636,6 +4636,9 @@ CMDs[#CMDs + 1] = {NAME = 'vehicleflyspeed  / vflyspeed [num]', DESC = 'Set vehi
 CMDs[#CMDs + 1] = {NAME = 'cframefly / cfly [speed]', DESC = 'Makes you fly, bypassing some anti cheats (works on mobile)'}
 CMDs[#CMDs + 1] = {NAME = 'uncframefly / uncfly', DESC = 'Disables cfly'}
 CMDs[#CMDs + 1] = {NAME = 'cframeflyspeed  / cflyspeed [num]', DESC = 'Sets cfly speed'}
+CMDs[#CMDs + 1] = {NAME = 'cframefly2 / cfly2 [speed]', DESC = 'Makes you fly, bypassing some anti cheats (works on mobile)'}
+CMDs[#CMDs + 1] = {NAME = 'uncframefly2 / uncfly2', DESC = 'Disables cfly'}
+CMDs[#CMDs + 1] = {NAME = 'cframeflyspeed2  / cflyspeed2 [num]', DESC = 'Sets cfly speed'}
 CMDs[#CMDs + 1] = {NAME = 'qefly [true / false]', DESC = 'enables or disables the Q and E hotkeys for fly'}
 CMDs[#CMDs + 1] = {NAME = 'vehiclenoclip / vnoclip', DESC = 'Turns off vehicle collision'}
 CMDs[#CMDs + 1] = {NAME = 'vehicleclip / vclip / unvnoclip', DESC = 'Enables vehicle collision'}
@@ -7353,6 +7356,22 @@ addcmd('togglefly',{},function(args, speaker)
 	end
 end)
 
+local User = game:GetService("UserInputService")
+local player = game:GetService("Players").LocalPlayer
+local GuiService = game:GetService("StarterGui")
+local mouse = game.Players.LocalPlayer:GetMouse()
+
+local holdingWKey = false
+local holdingSKey = false
+local holdingAKey = false
+local holdingDKey = false
+local holdingSpaceKey = false
+local holdingShiftKey = false
+
+local startup = false
+
+Speed_1 = -1
+
 CFspeed = 50
 addcmd('cframefly', {'cfly'}, function(args, speaker)
 	--Full credit to peyton#9148
@@ -7386,6 +7405,146 @@ addcmd('cframeflyspeed',{'cflyspeed'},function(args, speaker)
 	if isNumber(args[1]) then
 		CFspeed = args[1]
 	end
+end)
+
+addcmd('cframefly2', {'cfly2'}, function(args, speaker)
+    startup = true
+	if startup  == true then
+        local brick = Instance.new("Part", workspace)
+        brick.Size = Vector3.new(8, 2, 8)
+        brick.CFrame = game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, -4, 0)
+        brick.Transparency = 1
+        brick.Anchored = true
+        brick.Name = "Cfly"
+        game:GetService('RunService').RenderStepped:connect(function()
+            brick.CFrame = game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, -4, 0)
+            brick.Size = Vector3.new(8+-Speed_1, 2, 8+-Speed_1)
+        end)
+    end
+end)
+
+addcmd('uncframefly2',{'uncfly2'},function(args, speaker)
+    startup = false
+	game.Workspace.Cfly:remove()
+end)
+
+addcmd('cframeflyspeed2',{'cflyspeed2'},function(args, speaker)
+	if isNumber(args[1]) then
+		Speed_1 = args[1]
+	end
+end)
+
+game:GetService('RunService').RenderStepped:connect(function()
+    if startup then
+        if WHeld == true then
+          game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,Speed_1)
+        
+        end
+    end
+end)
+
+game:GetService('RunService').RenderStepped:connect(function()
+    if startup then
+	    if SHeld == true then
+        	game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,-Speed_1)
+        	
+	    end
+    end
+end)
+
+game:GetService('RunService').RenderStepped:connect(function()
+    if startup then
+	    if AHeld == true then
+		    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(Speed_1,0,0)
+		   
+	    end
+    end
+end)
+		
+		
+game:GetService('RunService').RenderStepped:connect(function()
+    if startup then
+	    if DHeld == true then
+		    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(-Speed_1,0,0)
+		    
+	    end
+    end
+end)
+				
+				
+game:GetService('RunService').RenderStepped:connect(function()
+    if startup then
+	    if SpaceHeld == true then
+	    	game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,-Speed_1,0)
+	    
+	    end
+    end
+end)
+
+game:GetService('RunService').RenderStepped:connect(function()
+    if startup then
+    	if ShiftHeld == true then
+	    	game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,Speed_1,0)
+	    
+        end
+    end
+
+end)					
+
+
+User.InputBegan:Connect(function(inputObject) 
+    if(inputObject.KeyCode==Enum.KeyCode.W) then
+        holdingWKey = true WHeld = true
+    end
+    
+    if(inputObject.KeyCode==Enum.KeyCode.S) then
+        holdingSKey = true SHeld = true
+    end
+
+    if(inputObject.KeyCode==Enum.KeyCode.A) then
+        holdingAKey = true AHeld = true
+    end
+
+    if(inputObject.KeyCode==Enum.KeyCode.D) then
+        holdingDKey = true DHeld = true
+    end
+    if(inputObject.KeyCode==Enum.KeyCode.LeftControl) then
+        holdingShiftKey = true ShiftHeld = true
+    end
+
+    if(inputObject.KeyCode==Enum.KeyCode.Space) then
+        holdingSpaceKey = true SpaceHeld= true
+    end
+
+    if(inputObject.KeyCode==Enum.KeyCode.W) then
+        holdingUKey = true WHeld = true
+    end
+end)
+
+User.InputEnded:Connect(function(inputObject)
+    if(inputObject.KeyCode==Enum.KeyCode.W) then
+        holdingWKey = false WHeld = false
+    end
+
+    if(inputObject.KeyCode==Enum.KeyCode.S) then
+        holdingSKey = false SHeld = false    
+    end
+
+    if(inputObject.KeyCode==Enum.KeyCode.A) then
+        holdingAKey = false AHeld = false    
+    end
+
+    if(inputObject.KeyCode==Enum.KeyCode.D) then
+        holdingDKey = false DHeld = false    
+    end
+
+    if(inputObject.KeyCode==Enum.KeyCode.LeftControl) then
+        holdingShiftKey = false ShiftHeld = false     
+    end
+
+    if(inputObject.KeyCode==Enum.KeyCode.Space) then
+        holdingSpaceKey = false SpaceHeld = false
+    end
 end)
 
 Floating = false
@@ -12792,198 +12951,6 @@ coroutine.wrap(function()
 	IntroBackground:Destroy()
 	minimizeHolder()
 end)()
-
-local User = game:GetService("UserInputService")
-local player = game:GetService("Players").LocalPlayer
-local GuiService = game:GetService("StarterGui")
-local mouse = game.Players.LocalPlayer:GetMouse()
-
-local holdingWKey = false
-local holdingSKey = false
-local holdingAKey = false
-local holdingDKey = false
-local holdingSpaceKey = false
-local holdingShiftKey = false
-
-local startup = false
-
-Speed_1 = -1
-
-
-mouse.KeyDown:connect(function(key)
-    if key == upkey then
-        Speed_1 = Speed_1 + -0.2
-        GuiService:SetCore("SendNotification", {Title = "Speed", Text = "Speed has gone up";})
-    end
- end)
-
-
-
-
- mouse.KeyDown:connect(function(key)
-    if key == downkey then
-        Speed_1 = Speed_1 - -0.2
-        GuiService:SetCore("SendNotification", {Title = "Speed", Text = "Speed has gone down";})
-    end
- end)
- 
- 
-
-
-
-
-
-
-
-
--- player.Character.HumanoidRootPart.Anchored = true
-
-
-mouse.KeyDown:connect(function(key)
-    if key == flykey then
-        if startup  == true then
-            startup = false
-            GuiService:SetCore("SendNotification", {Title = "Speed", Text = "Speed is now disabled";})
-        else
-            startup = true
-            GuiService:SetCore("SendNotification", {Title = "Speed", Text = "Speed is now enabled";})
-            
-            local brick = Instance.new("Part", workspace)
-            brick.Size = Vector3.new(8, 2, 8)
-            brick.CFrame = game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, -4, 0)
-            brick.Transparency = 1
-            brick.Anchored = true
-            brick.Name = "Brick"
-
-            mouse.KeyDown:connect(function(key)
-                if key == "m" then
-                    brick:remove()
-                end
-            end)
-            game:GetService('RunService').RenderStepped:connect(function()
-                brick.CFrame = game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, -4, 0)
-                brick.Size = Vector3.new(8+-Speed_1, 2, 8+-Speed_1)
-            end)
-        end
-    end
-end) 
-
-
-
-
-
-game:GetService('RunService').RenderStepped:connect(function()
-    if startup then
-        if WHeld == true then
-          game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,Speed_1)
-        
-        end
-    end
-end)
-
-game:GetService('RunService').RenderStepped:connect(function()
-    if startup then
-	    if SHeld == true then
-        	game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,-Speed_1)
-        	
-	    end
-    end
-end)
-
-game:GetService('RunService').RenderStepped:connect(function()
-    if startup then
-	    if AHeld == true then
-		    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(Speed_1,0,0)
-		   
-	    end
-    end
-end)
-		
-		
-game:GetService('RunService').RenderStepped:connect(function()
-    if startup then
-	    if DHeld == true then
-		    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(-Speed_1,0,0)
-		    
-	    end
-    end
-end)
-				
-				
-game:GetService('RunService').RenderStepped:connect(function()
-    if startup then
-	    if SpaceHeld == true then
-	    	game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,-Speed_1,0)
-	    
-	    end
-    end
-end)
-
-game:GetService('RunService').RenderStepped:connect(function()
-    if startup then
-    	if ShiftHeld == true then
-	    	game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,Speed_1,0)
-	    
-        end
-    end
-
-end)					
-
-
-User.InputBegan:Connect(function(inputObject) 
-    if(inputObject.KeyCode==Enum.KeyCode.W) then
-        holdingWKey = true WHeld = true
-    end
-    
-    if(inputObject.KeyCode==Enum.KeyCode.S) then
-        holdingSKey = true SHeld = true
-    end
-
-    if(inputObject.KeyCode==Enum.KeyCode.A) then
-        holdingAKey = true AHeld = true
-    end
-
-    if(inputObject.KeyCode==Enum.KeyCode.D) then
-        holdingDKey = true DHeld = true
-    end
-    if(inputObject.KeyCode==Enum.KeyCode.LeftControl) then
-        holdingShiftKey = true ShiftHeld = true
-    end
-
-    if(inputObject.KeyCode==Enum.KeyCode.Space) then
-        holdingSpaceKey = true SpaceHeld= true
-    end
-
-    if(inputObject.KeyCode==Enum.KeyCode.W) then
-        holdingUKey = true WHeld = true
-    end
-end)
-
-User.InputEnded:Connect(function(inputObject)
-    if(inputObject.KeyCode==Enum.KeyCode.W) then
-        holdingWKey = false WHeld = false
-    end
-
-    if(inputObject.KeyCode==Enum.KeyCode.S) then
-        holdingSKey = false SHeld = false    
-    end
-
-    if(inputObject.KeyCode==Enum.KeyCode.A) then
-        holdingAKey = false AHeld = false    
-    end
-
-    if(inputObject.KeyCode==Enum.KeyCode.D) then
-        holdingDKey = false DHeld = false    
-    end
-
-    if(inputObject.KeyCode==Enum.KeyCode.LeftControl) then
-        holdingShiftKey = false ShiftHeld = false     
-    end
-
-    if(inputObject.KeyCode==Enum.KeyCode.Space) then
-        holdingSpaceKey = false SpaceHeld = false
-    end
-end)
 
 plr = game.Players.LocalPlayer
 mouse = plr:GetMouse()
