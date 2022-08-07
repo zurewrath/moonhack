@@ -4742,6 +4742,8 @@ CMDs[#CMDs + 1] = {NAME = 'enableshiftlock / enablesl', DESC = 'Enables the shif
 CMDs[#CMDs + 1] = {NAME = 'lookat [plr]', DESC = 'Moves your camera view to a player'}
 CMDs[#CMDs + 1] = {NAME = '', DESC = ''}
 CMDs[#CMDs + 1] = {NAME = 'btools (CLIENT)', DESC = 'Gives you building tools (DOES NOT REPLICATE)'}
+CMDs[#CMDs + 1] = {NAME = 'ktools (CLIENT)', DESC = 'Gives you building tools (DOES NOT REPLICATE)'}
+CMDs[#CMDs + 1] = {NAME = 'unktools', DESC = 'Removes your building tool keybinds'}
 CMDs[#CMDs + 1] = {NAME = 'f3x (CLIENT)', DESC = 'Gives you F3X building tools (DOES NOT REPLICATE)'}
 CMDs[#CMDs + 1] = {NAME = 'partname / partpath', DESC = 'Allows you to click a part to see its path & name'}
 CMDs[#CMDs + 1] = {NAME = 'delete [instance name] (CLIENT)', DESC = 'Removes any part with a certain name from the workspace (DOES NOT REPLICATE)'}
@@ -9075,6 +9077,16 @@ addcmd('btools',{},function(args, speaker)
 	end
 end)
 
+local btool = false
+
+addcmd('ktools',{},function(args, speaker)
+	btool = true
+end)
+
+addcmd('unktools',{},function(args, speaker)
+	btool = false
+end)
+
 addcmd('f3x',{'fex'},function(args, speaker)
 	loadstring(game:GetObjects("rbxassetid://6695644299")[1].Source)()
 end)
@@ -12973,38 +12985,40 @@ end)
 
 --Input detection
 input.InputBegan:connect(function(key)
-    if key.KeyCode == deleteKey and clicking then
-        local targetPart = mouse.Target
-        --print("Deleted "..targetPart.Name)
-        if not targetPart or not targetPart:IsA("BasePart")then return end
-        local clone = targetPart:Clone()
-        clone.Parent = folder
-        local savedParent = Instance.new("ObjectValue", clone)
-        savedParent.Name = "S_P"
-        savedParent.Value = targetPart.Parent
-        targetPart:Destroy()
-        table.insert(undoTable, #undoTable + 1, clone)
-    end
-    if key.KeyCode == undoKey and #undoTable > 0 and clicking then
-        local targetPart = undoTable[#undoTable]
-        if not targetPart.S_P.Value then 
---print("This part's parent was deleted! Setting parent to game.Workspace.") 
-targetPart.Parent = workspace targetPart.S_P:Destroy() table.remove(undoTable, #undoTable) else
-       -- print("Undone deletion of "..targetPart.Name)
-        targetPart.Parent = targetPart.S_P.Value
-        targetPart.S_P:Destroy()
-        table.remove(undoTable, #undoTable)
-        end
-    end
-    if key.KeyCode == undoAllKey and clicking then
-        for i = 1, #undoTable do
-            local targetPart = undoTable[#undoTable]
-            --print(targetPart.Name)
-            if not targetPart.S_P.Value then print("This part's parent was deleted! Setting parent to game.Workspace.") targetPart.Parent = workspace targetPart.S_P:Destroy() table.remove(undoTable, #undoTable) else
-            targetPart.Parent = targetPart.S_P.Value
-            targetPart.S_P:Destroy()
-            table.remove(undoTable, #undoTable)
-            end
-        end 
-    end
+	if btool = true then
+		if key.KeyCode == deleteKey and clicking then
+			local targetPart = mouse.Target
+			--print("Deleted "..targetPart.Name)
+			if not targetPart or not targetPart:IsA("BasePart")then return end
+			local clone = targetPart:Clone()
+			clone.Parent = folder
+			local savedParent = Instance.new("ObjectValue", clone)
+			savedParent.Name = "S_P"
+			savedParent.Value = targetPart.Parent
+			targetPart:Destroy()
+			table.insert(undoTable, #undoTable + 1, clone)
+		end
+		if key.KeyCode == undoKey and #undoTable > 0 and clicking then
+			local targetPart = undoTable[#undoTable]
+			if not targetPart.S_P.Value then 
+	--print("This part's parent was deleted! Setting parent to game.Workspace.") 
+	targetPart.Parent = workspace targetPart.S_P:Destroy() table.remove(undoTable, #undoTable) else
+		-- print("Undone deletion of "..targetPart.Name)
+			targetPart.Parent = targetPart.S_P.Value
+			targetPart.S_P:Destroy()
+			table.remove(undoTable, #undoTable)
+			end
+		end
+		if key.KeyCode == undoAllKey and clicking then
+			for i = 1, #undoTable do
+				local targetPart = undoTable[#undoTable]
+				--print(targetPart.Name)
+				if not targetPart.S_P.Value then  targetPart.Parent = workspace targetPart.S_P:Destroy() table.remove(undoTable, #undoTable) else
+				targetPart.Parent = targetPart.S_P.Value
+				targetPart.S_P:Destroy()
+				table.remove(undoTable, #undoTable)
+				end
+			end 
+		end	
+	end
 end)
