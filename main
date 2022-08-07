@@ -1865,14 +1865,14 @@ local DefaultSettings = {
     }
 }
 
-local Settings = DefaultSettings
+local Settingss = DefaultSettings
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse();
 local MouseVector = Vector2new(Mouse.X, Mouse.Y);
 local Characters = {}
 
 local Drawings = {}
-local EspSettings = Settings.Esp
+local EspSettings = Settingss.Esp
 
 table.insert(Drawings, FOV);
 
