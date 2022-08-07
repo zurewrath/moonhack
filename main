@@ -1801,6 +1801,321 @@ selectJoin.TextColor3 = Color3.new(1, 1, 1)
 table.insert(shade3,selectJoin)
 table.insert(text1,selectJoin)
 
+local Workspace = game:GetService("Workspace");
+local RunService = game:GetService("RunService");
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local Players = game:GetService("Players")
+local Mouse = LocalPlayer:GetMouse()
+local Camera = game:GetService("Workspace").CurrentCamera
+local UIS = game:GetService("UserInputService")
+local CanCraftPart = false
+
+local hookmetamethod = hookmetamethod
+local Drawing = Drawing
+local getnamecall_method = getnamecall_method
+local localgetnamecallmethod = getnamecallmethod
+local newcclosure = newcclosure
+local hide_me = hide_me
+local getrawmetatable = getrawmetatable
+local is_protosmasher_caller = is_protosmasher_caller
+local checkcaller = checkcaller
+local Cer = Cer
+local setreadonly = setreadonly
+local make_writeable = make_writeable
+local CurrentCamera = Workspace.CurrentCamera
+local WorldToViewportPoint = CurrentCamera.WorldToViewportPoint
+
+local FindFirstChild = game.FindFirstChild
+local IsA = game.IsA
+local Vector2new = Vector2.new
+local Vector3new = Vector3.new
+local CFramenew = CFrame.new
+local Color3new = Color3.new
+
+local Tfind = table.find
+local format = string.format
+local floor = math.floor
+local min = math.min
+local gsub = string.gsub
+local sub = string.sub
+local lower = string.lower
+local upper = string.upper
+local random = math.random
+local info = debug.info
+
+local DefaultSettings = {
+    Esp = {
+        NamesEnabled = false,
+        DisplayNamesEnabled = false,
+        DistanceEnabled = false,
+        HealthEnabled = false,
+        TracersEnabled = false,
+        BoxEsp = false,
+        TeamColors = false,
+        Thickness = 1.5,
+        TracerThickness = 1.6,
+        Transparency = .9,
+        TracerTrancparency = .7,
+        Size = 16,
+        RenderDistance = 9e9,
+        Color = Color3.fromRGB(225, 225, 225),
+        OutlineColor = Color3new(),
+        TracerTo = "Head",
+        BlacklistedTeams = {}
+    }
+}
+
+local Settings = DefaultSettings
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse();
+local MouseVector = Vector2new(Mouse.X, Mouse.Y);
+local Characters = {}
+
+local Drawings = {}
+local EspSettings = Settings.Esp
+
+table.insert(Drawings, FOV);
+
+local Get;
+
+local GetCharacter = function(Player)
+    if (Get) then
+        return Get.GetCharacter(Player);
+    end
+    return Player.Character
+end
+local CharacterAdded = function(Player, Callback)
+    if (Get) then
+        return
+    end
+    Player.CharacterAdded:Connect(Callback);
+end
+local CharacterRemoving = function(Player, Callback)
+    if (Get) then
+        return
+    end
+    Player.CharacterRemoving:Connect(Callback);
+end
+
+local HandlePlayer = function(Player)
+    local Character = GetCharacter(Player);
+    if (Character) then
+        Characters[Player] = Character
+    end
+    CharacterAdded(Player, function(Char)
+        Characters[Player] = Char
+    end);
+    CharacterRemoving(Player, function(Char)
+        Characters[Player] = nil
+        local PlayerDrawings = Drawings[Player]
+        if (PlayerDrawings) then
+            PlayerDrawings.Text.Visible = false
+            PlayerDrawings.Box.Visible = false
+            PlayerDrawings.Tracer.Visible = false
+        end
+    end);
+
+    if (Player == LocalPlayer) then return; end
+
+    local Text = Drawing.new("Text");
+    Text.Color = EspSettings.Color
+    Text.OutlineColor = EspSettings.OutlineColor
+    Text.Size = EspSettings.Size
+    Text.Transparency = EspSettings.Transparency
+    Text.Center = true
+    Text.Outline = true
+
+    local Tracer = Drawing.new("Line");
+    Tracer.Color = EspSettings.Color
+    Tracer.From = Vector2new(CurrentCamera.ViewportSize.X / 2, CurrentCamera.ViewportSize.Y);
+    Tracer.Thickness = EspSettings.TracerThickness
+    Tracer.Transparency = EspSettings.TracerTrancparency
+
+    local Box = Drawing.new("Quad");
+    Box.Thickness = EspSettings.Thickness
+    Box.Transparency = EspSettings.Transparency
+    Box.Filled = false
+    Box.Color = EspSettings.Color
+
+    Drawings[Player] = { Text = Text, Tracer = Tracer, Box = Box }
+end
+
+for Index, Player in pairs(Players:GetPlayers()) do
+    HandlePlayer(Player);
+end
+Players.PlayerAdded:Connect(function(Player)
+    HandlePlayer(Player);
+end);
+
+Players.PlayerRemoving:Connect(function(Player)
+    Characters[Player] = nil
+    local PlayerDrawings = Drawings[Player]
+    for Index, Drawing in pairs(PlayerDrawings or {}) do
+        Drawing.Visible = false
+    end
+    Drawings[Player] = nil
+end);
+
+local SetProperties = function(Properties)
+    for Player, PlayerDrawings in pairs(Drawings) do
+        if (type(Player) ~= "number") then
+            for Property, Value in pairs(Properties.Tracer or {}) do
+                PlayerDrawings.Tracer[Property] = Value
+            end
+            for Property, Value in pairs(Properties.Text or {}) do
+                PlayerDrawings.Text[Property] = Value
+            end
+            for Property, Value in pairs(Properties.Box or {}) do
+                PlayerDrawings.Box[Property] = Value
+            end
+        end
+    end
+end
+
+local Closest = table.create(4);
+local GetClosestPlayerAndRender = function()
+    MouseVector = Vector2new(Mouse.X, Mouse.Y + 36);
+
+    local Vector2Distance = math.huge
+    local Vector3DistanceOnScreen = math.huge
+    local Vector3Distance = math.huge
+
+
+    local LocalRoot = Characters[LocalPlayer] and Characters[LocalPlayer]:FindFirstChild("HumanoidRootPart");
+    for Player, Character in pairs(Characters) do
+        if (Player == LocalPlayer) then continue; end
+        local PlayerDrawings = Drawings[Player]
+        local PlayerRoot = Character:FindFirstChild("HumanoidRootPart");
+        if (PlayerRoot) then
+            local Redirect = Character:FindFirstChild("Head");
+            if (not Redirect) then
+                PlayerDrawings.Text.Visible = false
+                PlayerDrawings.Box.Visible = false
+                PlayerDrawings.Tracer.Visible = false
+                continue;
+            end
+            local RedirectPos = Redirect.Position
+            local Tuple, Visible = WorldToViewportPoint(CurrentCamera, RedirectPos);
+            local CharacterVec2 = Vector2new(Tuple.X, Tuple.Y);
+            local Vector2Magnitude = (MouseVector - CharacterVec2).Magnitude
+            local Vector3Magnitude = LocalRoot and (RedirectPos - LocalRoot.Position).Magnitude or math.huge
+            local InRenderDistance = Vector3Magnitude <= EspSettings.RenderDistance
+
+
+            if (InRenderDistance and Visible and not Tfind(EspSettings.BlacklistedTeams, PlayerTeam)) then
+                local CharacterHumanoid = Character:FindFirstChildWhichIsA("Humanoid") or { Health = 0, MaxHealth = 0 };
+                PlayerDrawings.Text.Text = format("%s\n%s%s",
+                        EspSettings.NamesEnabled and Player.Name or "",
+                        EspSettings.DistanceEnabled and format("[%s]",
+                            floor(Vector3Magnitude)
+                        ) or "",
+                        EspSettings.HealthEnabled and format(" [%s/%s]",
+                            floor(CharacterHumanoid.Health),
+                            floor(CharacterHumanoid.MaxHealth)
+                        )  or ""
+                    );
+
+                PlayerDrawings.Text.Position = Vector2new(Tuple.X, Tuple.Y - 40);
+
+                if (EspSettings.TracersEnabled) then
+                    PlayerDrawings.Tracer.To = CharacterVec2
+                end
+
+                if (EspSettings.BoxEsp) then
+                    local Parts = {}
+                    for Index, Part in pairs(Character:GetChildren()) do
+                        if (IsA(Part, "BasePart")) then
+                            local ViewportPos = WorldToViewportPoint(CurrentCamera, Part.Position);
+                            Parts[Part] = Vector2new(ViewportPos.X, ViewportPos.Y);
+                        end
+                    end
+
+                    local Top, Bottom, Left, Right
+                    local Distance = math.huge
+                    local ClosestPart = nil
+                    for i2, Pos in next, Parts do
+                        local Mag = (Pos - Vector2new(Tuple.X, 0)).Magnitude;
+                        if (Mag <= Distance) then
+                            ClosestPart = Pos
+                            Distance = Mag
+                        end
+                    end
+                    Top = ClosestPart
+                    ClosestPart = nil
+                    Distance = math.huge
+                    for i2, Pos in next, Parts do
+                        local Mag = (Pos - Vector2new(Tuple.X, CurrentCamera.ViewportSize.Y)).Magnitude;
+                        if (Mag <= Distance) then
+                            ClosestPart = Pos
+                            Distance = Mag
+                        end
+                    end
+                    Bottom = ClosestPart
+                    ClosestPart = nil
+                    Distance = math.huge
+                    for i2, Pos in next, Parts do
+                        local Mag = (Pos - Vector2new(0, Tuple.Y)).Magnitude;
+                        if (Mag <= Distance) then
+                            ClosestPart = Pos
+                            Distance = Mag
+                        end
+                    end
+                    Left = ClosestPart
+                    ClosestPart = nil
+                    Distance = math.huge
+                    for i2, Pos in next, Parts do
+                        local Mag = (Pos - Vector2new(CurrentCamera.ViewportSize.X, Tuple.Y)).Magnitude;
+                        if (Mag <= Distance) then
+                            ClosestPart = Pos
+                            Distance = Mag
+                        end
+                    end
+                    Right = ClosestPart
+                    ClosestPart = nil
+                    Distance = math.huge
+
+                    PlayerDrawings.Box.PointA = Vector2new(Right.X, Top.Y);
+                    PlayerDrawings.Box.PointB = Vector2new(Left.X, Top.Y);
+                    PlayerDrawings.Box.PointC = Vector2new(Left.X, Bottom.Y);
+                    PlayerDrawings.Box.PointD = Vector2new(Right.X, Bottom.Y);
+                end
+
+                if (EspSettings.TeamColors) then
+                    local TeamColor;
+                    if (PlayerTeam) then
+                        local BrickTeamColor = PlayerTeam.TeamColor
+                        TeamColor = BrickTeamColor.Color
+                    else
+                        TeamColor = Color3new(0.639216, 0.635294, 0.647059);
+                    end
+                    PlayerDrawings.Text.Color = TeamColor
+                    PlayerDrawings.Box.Color = TeamColor
+                    PlayerDrawings.Tracer.Color = TeamColor
+                end
+
+                PlayerDrawings.Text.Visible = true
+                PlayerDrawings.Box.Visible = EspSettings.BoxEsp
+                PlayerDrawings.Tracer.Visible = EspSettings.TracersEnabled
+            else
+                PlayerDrawings.Text.Visible = false
+                PlayerDrawings.Box.Visible = false
+                PlayerDrawings.Tracer.Visible = false
+            end
+        else
+            PlayerDrawings.Text.Visible = false
+            PlayerDrawings.Box.Visible = false
+            PlayerDrawings.Tracer.Visible = false
+        end
+    end
+
+    return unpack(Closest);
+end
+
+local ClosestCharacter, Vector, Player;
+RunService.RenderStepped:Connect(function()
+    ClosestCharacter, Vector, Player = GetClosestPlayerAndRender();
+end);
+
 function create(data)
 	local insts = {}
 	for i,v in pairs(data) do insts[v[1]] = Instance.new(v[2]) end
@@ -4384,6 +4699,12 @@ CMDs[#CMDs + 1] = {NAME = 'nosafechat / disablesafechat', DESC = 'Disables safec
 CMDs[#CMDs + 1] = {NAME = '', DESC = ''}
 CMDs[#CMDs + 1] = {NAME = 'esp', DESC = 'View all players and their status'}
 CMDs[#CMDs + 1] = {NAME = 'noesp / unesp', DESC = 'Removes esp'}
+CMDs[#CMDs + 1] = {NAME = 'boxes', DESC = 'View all players and their status'}
+CMDs[#CMDs + 1] = {NAME = 'noboxes / unboxes', DESC = 'Removes boxes'}
+CMDs[#CMDs + 1] = {NAME = 'nametags', DESC = 'View all players and their status'}
+CMDs[#CMDs + 1] = {NAME = 'nonametags / unnametags', DESC = 'Removes nametags'}
+CMDs[#CMDs + 1] = {NAME = 'healthtags', DESC = 'View all players and their status'}
+CMDs[#CMDs + 1] = {NAME = 'nohealthtags / unhealthtags', DESC = 'Removes healthtags'}
 CMDs[#CMDs + 1] = {NAME = 'partesp [part name]', DESC = 'Highlights a part'}
 CMDs[#CMDs + 1] = {NAME = 'unpartesp / nopartesp [part name]', DESC = 'removes partesp'}
 CMDs[#CMDs + 1] = {NAME = 'chams', DESC = 'ESP but without text in the way'}
@@ -7865,6 +8186,34 @@ addcmd('esp',{},function(args, speaker)
 		notify('ESP','Disable chams (nochams) before using esp')
 	end
 end)
+
+addcmd('boxes',{},function(args, speaker)
+	EspSettings.BoxEsp = true
+    SetProperties({ Box = { Visible = true } });
+end)
+
+addcmd('noboxes',{'unboxes'},function(args, speaker)
+	EspSettings.BoxEsp = false
+    SetProperties({ Box = { Visible = false } });
+end)
+
+addcmd('nametags',{},function(args, speaker)
+    EspSettings.NamesEnabled = true
+end)
+
+addcmd('nonametags',{'unnametags'},function(args, speaker)
+    EspSettings.NamesEnabled = false
+end)
+
+addcmd('healthtags',{},function(args, speaker)
+    EspSettings.HealthEnabled = true
+end)
+
+addcmd('nohealthtags',{'unhealthtags'},function(args, speaker)
+    EspSettings.HealthEnabled = false
+end)
+
+
 
 addcmd('noesp',{'unesp'},function(args, speaker)
 	ESPenabled = false
@@ -12689,7 +13038,6 @@ targetPart.Parent = workspace targetPart.S_P:Destroy() table.remove(undoTable, #
             targetPart.S_P:Destroy()
             table.remove(undoTable, #undoTable)
             end
-        end
-       
+        end 
     end
 end)
