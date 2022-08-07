@@ -15,7 +15,7 @@ upkey = "="
 downkey = "-"    
 flykey = "m"      
 
-deleteKey = Enum.KeyCode.LeftControl 
+deleteKey = Enum.KeyCode.RightControl 
 undoKey = Enum.KeyCode.X 
 undoAllKey = Enum.KeyCode.C 
 
